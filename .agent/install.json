@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "agentic_stack_version": "0.15.0",
+  "abs_target": "/home/drsolodev/projects/my-first-agentic/agentic-stack",
+  "installed_at": "2026-05-16T23:59:18Z",
+  "adapters": {
+    "opencode": {
+      "installed_at": "2026-05-06T04:13:25Z",
+      "files_written": [
+        "AGENTS.md",
+        "opencode.json"
+      ],
+      "files_overwritten": [],
+      "files_alerted": [],
+      "file_results": [
+        {
+          "dst": "AGENTS.md",
+          "result": "written_new"
+        },
+        {
+          "dst": "opencode.json",
+          "result": "written_new"
+        }
+      ],
+      "post_install_results": []
+    },
+    "claude-code": {
+      "installed_at": "2026-05-16T23:59:18Z",
+      "files_written": [
+        "CLAUDE.md",
+        ".claude/settings.json"
+      ],
+      "files_overwritten": [],
+      "files_alerted": [],
+      "file_results": [
+        {
+          "dst": "CLAUDE.md",
+          "result": "written_new"
+        },
+        {
+          "dst": ".claude/settings.json",
+          "result": "written_new"
+        }
+      ],
+      "post_install_results": [],
+      "brain_root_primitive": "$CLAUDE_PROJECT_DIR"
+    },
+    "cursor": {
+      "installed_at": "2026-05-06T04:16:14Z",
+      "files_written": [
+        ".cursor/rules/agentic-stack.mdc"
+      ],
+      "files_overwritten": [],
+      "files_alerted": [],
+      "file_results": [
+        {
+          "dst": ".cursor/rules/agentic-stack.mdc",
+          "result": "written_new"
+        }
+      ],
+      "post_install_results": []
+    },
+    "windsurf": {
+      "installed_at": "2026-05-06T04:16:14Z",
+      "files_written": [
+        ".windsurf/rules/agentic-stack.md",
+        ".windsurfrules"
+      ],
+      "files_overwritten": [],
+      "files_alerted": [],
+      "file_results": [
+        {
+          "dst": ".windsurf/rules/agentic-stack.md",
+          "result": "written_new"
+        },
+        {
+          "dst": ".windsurfrules",
+          "result": "written_new"
+        }
+      ],
+      "post_install_results": []
+    },
+    "openclaw": {
+      "installed_at": "2026-05-06T04:18:31Z",
+      "files_written": [
+        ".openclaw-system.md"
+      ],
+      "files_overwritten": [],
+      "files_alerted": [],
+      "file_results": [
+        {
+          "dst": "AGENTS.md",
+          "result": "left_alone"
+        },
+        {
+          "dst": ".openclaw-system.md",
+          "result": "written_new"
+        }
+      ],
+      "post_install_results": [
+        {
+          "action": "openclaw_register_workspace",
+          "status": "failed",
+          "agent_name": "agentic-stack-740998",
+          "stderr": "timed out after 30s"
+        }
+      ]
+    }
+  }
+}
