@@ -1,91 +1,80 @@
-# Agent Infrastructure
+# Agent Brain — health-triage
 
-This folder is the portable brain. Any harness (Claude Code, Cursor, Windsurf,
-OpenCode, OpenClaw, Hermes, standalone Python) can mount it and get the
-same memory, skills, and protocols.
+โฟลเดอร์นี้คือ "สมอง" ของ AI agent ที่ทำงานในโปรเจกต์นี้
+ใช้ได้กับทุก harness: Claude Code, Cursor, Windsurf, OpenClaw ฯลฯ
 
-## Memory (read in this order)
-- `memory/personal/PREFERENCES.md` — stable user conventions
-- `memory/working/WORKSPACE.md` — current task state
-- `memory/working/REVIEW_QUEUE.md` — pending candidate lessons waiting for you
-- `memory/semantic/DECISIONS.md` — past architectural choices
-- `memory/semantic/LESSONS.md` — distilled patterns (rendered from `lessons.jsonl`)
-- `memory/episodic/AGENT_LEARNINGS.jsonl` — raw experience log (top-k by salience)
+---
 
-## Review Queue (host-agent responsibility)
+## เริ่ม session ใหม่ — อ่านตามลำดับนี้
 
-Candidate lessons are clustered + staged automatically by `memory/auto_dream.py`.
-The host agent — you — does the actual review using the CLI tools below.
+1. `memory/personal/PREFERENCES.md` — วิธีทำงานของ user
+2. `memory/working/WORKSPACE.md` — งานที่กำลังทำอยู่
+3. `memory/working/REVIEW_QUEUE.md` — บทเรียนที่รอ review
+4. `memory/semantic/LESSONS.md` — บทเรียนที่ผ่านการ approve แล้ว
 
-Check `memory/working/REVIEW_QUEUE.md` at session start. If pending > 10 or
-oldest staged > 7 days, review before substantive work.
+---
 
-Workflow:
-1. `python .agent/tools/list_candidates.py` — pending candidates, sorted by priority
-2. For each: decide accept / reject / defer based on claim, evidence_ids,
-   cluster_size, and any contradictions with existing LESSONS.md
-3. `python .agent/tools/graduate.py <id> --rationale "..."` to accept
-4. `python .agent/tools/reject.py <id> --reason "..."` to reject
-5. `python .agent/tools/reopen.py <id>` to requeue a previously-rejected item
-6. Review in a **batch**, not one-by-one — cross-candidate contradictions
-   only surface when you see multiple at once.
+## Memory
 
-The heuristic prefilter in `memory/validate.py` has already dropped obvious
-junk (too-short claims, exact duplicates). Everything staged needs real
-judgment. Rationale is required for graduation — rubber-stamped promotions
-are the exact failure mode this layer prevents.
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `memory/personal/PREFERENCES.md` | preference และ convention ของ user |
+| `memory/working/WORKSPACE.md` | งานปัจจุบัน — อัปเดตระหว่างทำงาน ล้างเมื่อเสร็จ |
+| `memory/working/REVIEW_QUEUE.md` | candidate lessons รอ review |
+| `memory/semantic/DECISIONS.md` | การตัดสินใจสถาปัตยกรรมที่ผ่านมา |
+| `memory/semantic/LESSONS.md` | บทเรียนที่ distill แล้ว (render จาก `lessons.jsonl`) |
+| `memory/episodic/AGENT_LEARNINGS.jsonl` | raw experience log |
+
+---
 
 ## Skills
-- `skills/_index.md` — read first for discovery
-- `skills/_manifest.jsonl` — machine-readable skill metadata
-- Load a full `SKILL.md` only when its triggers match the current task
-- Every skill has a self-rewrite hook; invoke it after failures
 
-## Design Systems
-- If the project root contains `DESIGN.md`, treat it as the source of truth
-  for visual design decisions and load `skills/design-md/SKILL.md` when a
-  task mentions `DESIGN.md`, Google Stitch, design tokens, design system,
-  or visual design. (The skill's `preconditions` field gates loading on
-  `DESIGN.md` actually existing — keep this rule in lockstep with
-  `skills/_manifest.jsonl` to avoid same-task / different-harness drift.)
-- Prefer exact tokens, component rules, and design rationale from
-  `DESIGN.md` over invented colors, typography, spacing, shadows, or motion.
-- Do not modify `DESIGN.md` unless the user explicitly asks for a design
-  system change; implementation work consumes the contract, it doesn't
-  edit it.
+- `skills/_index.md` — ดูรายการ skill ทั้งหมดก่อน
+- `skills/_manifest.jsonl` — metadata แบบ machine-readable
+- โหลด `SKILL.md` เฉพาะ skill ที่ trigger ตรงกับงานปัจจุบัน
+
+---
 
 ## Protocols
-- `protocols/permissions.md` — read before any tool call
-- `protocols/tool_schemas/` — typed interfaces for external tools
-- `protocols/delegation.md` — rules for sub-agent handoff
 
-## Host-agent CLI tools (in `tools/`)
-Daily driver, highest-leverage first:
-- `recall.py "<intent>"` — surface graduated lessons relevant to what
-  you're about to do. **Run before deploy / migration / timestamp / debug /
-  refactor work.** This is how lessons cross harnesses.
-- `learn.py "<rule>" --rationale "<why>"` — teach the agent a new lesson
-  in one shot (stage + graduate + render). For rules you already know.
-- `show.py` — one-screen dashboard of brain state: episodes, candidates,
-  lessons, failing skills, activity graph.
-- `data_layer_export.py` — local cross-harness activity/data-layer export:
-  agent events, cron timelines, tokens/cost estimates, categories,
-  harness mix, `dashboard.html`, and `daily-report.md`.
-- `data_flywheel_export.py` — local export of approved, redacted runs into
-  trace records, context cards, eval cases, training-ready JSONL, and
-  flywheel metrics. It does not train models or call APIs.
-- `list_candidates.py` / `graduate.py` / `reject.py` / `reopen.py` — review
-  protocol for patterns the dream cycle has staged.
-- `memory_reflect.py <skill> <action> <outcome>` — log a significant event.
+- `protocols/permissions.md` — อ่านก่อนทุก tool call
+- `protocols/tool_schemas/` — typed interfaces สำหรับ external tools
+- `protocols/delegation.md` — กฎการส่งงานให้ sub-agent
 
-## Rules
-1. Check memory before decisions you have been corrected on before.
-2. If `REVIEW_QUEUE.md` shows backlog past threshold, handle it before the new task.
-3. Log every significant action to `memory/episodic/AGENT_LEARNINGS.jsonl`
-   via `.agent/tools/memory_reflect.py`.
-4. Update `memory/working/WORKSPACE.md` as you work; archive on completion.
-5. Never hand-edit `memory/semantic/LESSONS.md` — it's rendered from
-   `lessons.jsonl`. Use `graduate.py` / `reject.py` instead.
-6. Follow `protocols/permissions.md`. Blocked means blocked.
-7. When a self-rewrite hook fires, propose conservative edits only.
-8. The harness is dumb on purpose. Reasoning lives in skills + the host agent.
+---
+
+## CLI Tools (ใน `tools/`)
+
+| คำสั่ง | ใช้เมื่อ |
+|--------|---------|
+| `recall.py "<intent>"` | **รันก่อนเสมอ** เมื่อจะ deploy / migrate / debug / refactor |
+| `learn.py "<rule>" --rationale "<why>"` | สอน agent กฎใหม่ทันที |
+| `show.py` | ดูภาพรวม brain state ทั้งหมดในหน้าเดียว |
+| `memory_reflect.py <skill> <action> <outcome>` | log เหตุการณ์สำคัญ |
+| `list_candidates.py` | ดู candidate lessons รอ review |
+| `graduate.py <id> --rationale "..."` | approve candidate |
+| `reject.py <id> --reason "..."` | reject candidate |
+
+---
+
+## Review Queue
+
+ถ้า `REVIEW_QUEUE.md` มี pending > 10 หรือ oldest > 7 วัน
+→ review ก่อนเริ่มงานใหม่เสมอ
+
+ขั้นตอน:
+1. `python .agent/tools/list_candidates.py`
+2. พิจารณาแต่ละ candidate — accept / reject / defer
+3. `graduate.py` หรือ `reject.py` พร้อม rationale
+4. review เป็น batch ไม่ใช่ทีละอัน
+
+---
+
+## กฎที่ต้องทำตามเสมอ
+
+1. เช็ค memory ก่อนตัดสินใจในเรื่องที่เคยถูก correct มาก่อน
+2. รัน `recall.py` ก่อน deploy / migration / debug ทุกครั้ง
+3. Log ทุก action สำคัญผ่าน `memory_reflect.py`
+4. อัปเดต `WORKSPACE.md` ระหว่างทำงาน ล้างเมื่อเสร็จ
+5. **ห้าม** แก้ `LESSONS.md` ด้วยมือ — ใช้ `graduate.py` เท่านั้น
+6. ทำตาม `protocols/permissions.md` เสมอ — blocked คือ blocked

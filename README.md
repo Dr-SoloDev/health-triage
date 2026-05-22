@@ -6,7 +6,125 @@
 
 ---
 
-## สถานะปัจจุบัน (อัปเดต: 16 พฤษภาคม 2026)
+## สถานะปัจจุบัน
+
+| ส่วน | สถานะ | หมายเหตุ |
+|------|--------|----------|
+| `packages/api` | ✅ พร้อมใช้งาน | Fastify + Claude AI (Maxplus.ai proxy) |
+| `packages/shared` | ✅ พร้อมใช้งาน | constants ระดับสี triage |
+| `apps/mobile` | ✅ เสร็จแล้ว | React PWA ครบ 3 หน้า — port 5173 |
+| `apps/dashboard` | ✅ เสร็จแล้ว | React Web สำหรับ อสม. — port 5174 |
+| Database | ⚠️ In-memory | restart แล้วข้อมูลหาย — รอเชื่อม Supabase |
+
+---
+
+## โครงสร้างโปรเจกต์
+
+```
+health-triage/
+├── packages/
+│   ├── api/                  # Fastify API + Claude AI engine (port 3000)
+│   │   └── src/
+│   │       ├── index.js      # entry point
+│   │       └── routes/
+│   │           ├── triage.js    # POST /api/triage/start, /chat
+│   │           └── dashboard.js # GET/POST /api/dashboard/cases, PATCH /review, GET /summary
+│   └── shared/
+│       └── src/index.js      # TRIAGE_LEVELS, TRIAGE_LABELS, TRIAGE_DESCRIPTIONS
+└── apps/
+    ├── mobile/               # PWA สำหรับผู้ใช้ทั่วไป (port 5173)
+    │   └── src/screens/
+    │       ├── StartScreen.jsx   # กรอกชื่อ/อายุ/หมู่บ้าน
+    │       ├── ChatScreen.jsx    # chat กับ AI ซักอาการ
+    │       └── ResultScreen.jsx  # แสดงผล 🟢🟡🔴 + คำแนะนำ
+    └── dashboard/            # Web app สำหรับ อสม. (port 5174)
+        └── src/screens/
+            ├── CaseListScreen.jsx    # ตารางเคสทั้งหมด + filter
+            ├── CaseReviewScreen.jsx  # รายละเอียดเคส + บันทึกประเมิน
+            └── DashboardStatsScreen.jsx # สรุปรายวัน
+```
+
+---
+
+## วิธีรันในเครื่อง
+
+```bash
+# 1. ติดตั้ง dependencies
+npm install
+
+# 2. ตั้งค่า environment
+cp packages/api/.env.example packages/api/.env
+# แก้ไขใส่ค่าต่อไปนี้:
+# ANTHROPIC_API_KEY=ccsk-...
+# ANTHROPIC_BASE_URL=https://api.maxplus-ai.cc
+
+# 3. รัน API server — terminal 1
+npm run dev:api
+
+# 4. รัน Mobile app — terminal 2
+npm run dev:mobile
+
+# 5. รัน Dashboard — terminal 3
+cd apps/dashboard && node node_modules/vite/bin/vite.js --port 5174
+```
+
+เปิดเบราว์เซอร์:
+- `http://localhost:5173` — mobile app (ผู้ใช้ทั่วไป)
+- `http://localhost:5174` — dashboard (อสม.)
+
+---
+
+## API Endpoints
+
+### Triage (mobile app)
+```
+POST /api/triage/start   body: { userId, name, age, village }
+POST /api/triage/chat    body: { sessionId, messages, userMessage }
+```
+
+### Dashboard (อสม.)
+```
+GET   /api/dashboard/cases                    # รายการเคสทั้งหมด
+POST  /api/dashboard/cases                    # บันทึกผลการคัดกรอง
+PATCH /api/dashboard/cases/:id/review         # อสม. บันทึกการประเมิน
+GET   /api/dashboard/summary                  # สรุปรายวัน
+```
+
+---
+
+## สิ่งที่ต้องทำต่อ
+
+| ลำดับ | งาน | รายละเอียด |
+|-------|-----|------------|
+| 1 | 🟡 เชื่อม Supabase | แทนที่ in-memory array ด้วย database ถาวร |
+| 2 | 🟡 PWA Icons | ใส่ `icon-192.png` และ `icon-512.png` จริงใน mobile |
+| 3 | 🟢 Session persistence | เก็บ chat history ใน localStorage กันหลุดเมื่อปิด browser |
+
+---
+
+## Tech Stack
+
+| ส่วน | เทคโนโลยี |
+|------|-----------|
+| API | Node.js + Fastify |
+| AI | Claude Sonnet 4.6 ผ่าน Maxplus.ai |
+| Mobile | React 19 + Vite + Tailwind CSS v4 |
+| Dashboard | React 19 + Vite 5 + Tailwind CSS v3 |
+| Database | In-memory (MVP) → Supabase (Phase 2) |
+
+> **หมายเหตุ Android/Termux:** Dashboard ใช้ Vite 5 + Tailwind v3 เพราะ Vite 8 (Rolldown) และ Tailwind v4 (Oxide) มี native binary ที่ crash บน Android kernel 5.15
+
+---
+
+## Team
+
+- **Dr.Solodev** — Creator, Full-Cycle Developer
+- **Claude** — AI Agent, Co-developer (Claude Code)
+
+## License
+
+MIT
+
 
 | ส่วน | สถานะ | หมายเหตุ |
 |------|--------|----------|
